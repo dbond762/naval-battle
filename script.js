@@ -50,8 +50,8 @@ const show = {
   miss(elem) {
     this.changeClass(elem, 'miss');
   },
-  dead() {
-
+  dead(elem) {
+    this.changeClass(elem, 'dead');
   },
   changeClass(elem, value) {
     elem.className = value;
@@ -75,6 +75,13 @@ const fire = (event) => {
       show.hit(target);
       play.updateData = 'hit';
       ship.hit[index] = 'x';
+      const life = ship.hit.indexOf('');
+      if (life < 0) {
+        play.updateData = 'dead';
+        for (const id of ship.location) {
+          show.dead(document.getElementById(id));
+        }
+      }
     }
   }
 };
