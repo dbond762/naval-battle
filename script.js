@@ -6,6 +6,12 @@ const enemy = document.getElementById('enemy');
 const again = document.getElementById('again');
 const header = document.querySelector('.header');
 
+const boardSize = 10;
+const horizontalDirectionProbability = 0.5;
+const finalPhrase = 'Игра окончена!';
+const finalColor = '#f00';
+const storageRecordID = 'navalBattleRecord';
+
 const game = {
   ships: [],
   shipCount: 0,
@@ -30,15 +36,15 @@ const game = {
       location: [],
     };
 
-    const direction = Math.random() < 0.5;
+    const direction = Math.random() < horizontalDirectionProbability;
     let x, y;
 
     if (direction) {
-      x = Math.floor(Math.random() * 10);
-      y = Math.floor(Math.random() * (10 - shipSize));
+      x = Math.floor(Math.random() * boardSize);
+      y = Math.floor(Math.random() * (boardSize - shipSize));
     } else {
-      x = Math.floor(Math.random() * (10 - shipSize));
-      y = Math.floor(Math.random() * 10);
+      x = Math.floor(Math.random() * (boardSize - shipSize));
+      y = Math.floor(Math.random() * boardSize);
     }
 
     for (let i = 0; i < shipSize; i++) {
@@ -72,7 +78,7 @@ const game = {
       for (let x = startCoordX; x < startCoordX + 3; x++) {
         const startCoordY = location[i][1] - 1;
         for (let y = startCoordY; y < startCoordY + 3; y++) {
-          if (x >= 0 && x < 10 && y >= 0 && y < 10) {
+          if (x >= 0 && x < boardSize && y >= 0 && y < boardSize) {
             const coord = x + '' + y;
             this.collision.add(coord);
           }
@@ -83,7 +89,7 @@ const game = {
 };
 
 const play = {
-  record: localStorage.getItem('navalBattleRecord') || 0,
+  record: localStorage.getItem(storageRecordID) || 0,
   shot: 0,
   hit: 0,
   dead: 0,
@@ -141,11 +147,11 @@ const fire = (event) => {
         game.shipCount -= 1;
 
         if (game.shipCount < 1) {
-          header.textContent = 'Игра окончена!';
-          header.style.color = '#f00';
+          header.textContent = finalPhrase;
+          header.style.color = finalColor;
 
           if (play.shot < play.record || play.record == 0) {
-            localStorage.setItem('navalBattleRecord', play.shot);
+            localStorage.setItem(storageRecordID, play.shot);
             play.record = play.shot;
             play.render();
           }
