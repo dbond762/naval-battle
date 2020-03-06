@@ -104,6 +104,10 @@ const fire = (event) => {
 const init = () => {
   enemy.addEventListener('click', fire);
   play.render();
+
+  again.addEventListener('click', () => {
+    location.reload();
+  });
 };
 
 init();
