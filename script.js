@@ -21,6 +21,10 @@ const game = {
   },
   collision: new Set(),
   generateShip() {
+    this.ships = [];
+    this.shipCount = 0;
+    this.collision.clear();
+
     for (let i = 0; i < this.optionShip.count.length; i++) {
       for (let j = 0; j < this.optionShip.count[i]; j++) {
         const size = this.optionShip.size[i];
@@ -103,6 +107,19 @@ const play = {
     hit.textContent = this.hit;
     dead.textContent = this.dead;
   },
+  reset() {
+    this.shot = 0;
+    this.hit = 0;
+    this.dead = 0;
+
+    enemy.querySelectorAll('td').forEach((cell) => {
+      cell.classList.remove('hit', 'miss', 'dead');
+    });
+
+    game.generateShip();
+
+    this.render();
+  }
 };
 
 const show = {
@@ -167,7 +184,7 @@ const init = () => {
   game.generateShip();
 
   again.addEventListener('click', () => {
-    location.reload();
+    play.reset();
   });
 
   record.addEventListener('dblclick', () => {
