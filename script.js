@@ -4,6 +4,7 @@ const hit = document.getElementById('hit');
 const dead = document.getElementById('dead');
 const enemy = document.getElementById('enemy');
 const again = document.getElementById('again');
+const header = document.querySelector('.header');
 
 const game = {
   ships: [
@@ -24,10 +25,11 @@ const game = {
       hit: [''],
     },
   ],
+  shipCount: 4,
 };
 
 const play = {
-  record: 0,
+  record: localStorage.getItem('navalBattleRecord') || 0,
   shot: 0,
   hit: 0,
   dead: 0,
@@ -81,6 +83,19 @@ const fire = (event) => {
         for (const id of ship.location) {
           show.dead(document.getElementById(id));
         }
+
+        game.shipCount -= 1;
+
+        if (game.shipCount < 1) {
+          header.textContent = 'Игра окончена!';
+          header.style.color = '#f00';
+
+          if (play.shot < play.record || play.record == 0) {
+            localStorage.setItem('navalBattleRecord', play.shot);
+            play.record = play.shot;
+            play.render();
+          }
+        }
       }
     }
   }
@@ -88,6 +103,7 @@ const fire = (event) => {
 
 const init = () => {
   enemy.addEventListener('click', fire);
+  play.render();
 };
 
 init();
