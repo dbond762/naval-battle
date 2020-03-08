@@ -20,8 +20,7 @@ func init() {
 }
 
 func main() {
-	fileServer := http.FileServer(http.Dir("./frontend"))
-	http.Handle("/", fileServer)
+	http.Handle("/", http.FileServer(http.Dir("./frontend")))
 
 	gameHttpDelivery.NewGameHandler()
 

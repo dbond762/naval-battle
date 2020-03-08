@@ -2,8 +2,10 @@ const record = document.querySelector('#record');
 const shot = document.querySelector('#shot');
 const hit = document.querySelector('#hit');
 const dead = document.querySelector('#dead');
+const myBoard = document.querySelector('#my-board');
 const enemy = document.querySelector('#enemy');
 const again = document.querySelector('#again');
+const generate = document.querySelector('#generate');
 const header = document.querySelector('.header');
 
 const boardSize = 10;
@@ -11,8 +13,12 @@ const horizontalDirectionProbability = 0.5;
 const finalPhrase = 'Игра окончена!';
 const finalColor = '#f00';
 const storageRecordID = 'navalBattleRecord';
+const myBoardId = 'm';
+const enemyBoardId = 'e';
 
 const game = {
+  myShips: [],
+  myShipCount: 0,
   ships: [],
   shipCount: 0,
   optionShip: {
@@ -20,21 +26,39 @@ const game = {
     size: [4, 3, 2, 1],
   },
   collision: new Set(),
-  generateShip() {
-    this.ships = [];
-    this.shipCount = 0;
+  generateShip(boardId) {
+    switch (boardId) {
+      case myBoardId:
+        this.myShips = [];
+        this.myShipCount = 0;
+        break;
+      case enemyBoardId:
+        this.ships = [];
+        this.shipCount = 0;
+        break;
+    }
+    
     this.collision.clear();
 
     for (let i = 0; i < this.optionShip.count.length; i++) {
       for (let j = 0; j < this.optionShip.count[i]; j++) {
         const size = this.optionShip.size[i];
-        const ship = this.generateOphionsShip(size);
-        this.ships.push(ship);
-        this.shipCount++;
+        const ship = this.generateOphionsShip(size, boardId);
+
+        switch (boardId) {
+          case myBoardId:
+            this.myShips.push(ship);
+            this.myShipCount++;
+            break;
+          case enemyBoardId:
+            this.ships.push(ship);
+            this.shipCount++;
+            break;
+        }
       }
     }
   },
-  generateOphionsShip(shipSize) {
+  generateOphionsShip(shipSize, boardId) {
     const ship = {
       hit: [],
       location: [],
@@ -53,18 +77,18 @@ const game = {
 
     for (let i = 0; i < shipSize; i++) {
       if (direction) {
-        ship.location.push(x + '' + (y + i));
+        ship.location.push(boardId + '_' + x + '_' + (y + i));
       } else {
-        ship.location.push((x + i) + '' + y);
+        ship.location.push(boardId + '_' + (x + i) + '_' + y);
       }
       ship.hit.push('');
     }
 
     if (this.checkCollision(ship.location)) {
-      return this.generateOphionsShip(shipSize);
+      return this.generateOphionsShip(shipSize, boardId);
     }
 
-    this.addCollision(ship.location);
+    this.addCollision(ship.location, boardId);
 
     return ship;
   },
@@ -76,14 +100,15 @@ const game = {
     }
     return false;
   },
-  addCollision(location) {
+  addCollision(location, boardId) {
     for (let i = 0; i < location.length; i++) {
-      const startCoordX = location[i][0] - 1;
+      const coords = location[i].split('_');
+      const startCoordX = coords[1] - 1;
       for (let x = startCoordX; x < startCoordX + 3; x++) {
-        const startCoordY = location[i][1] - 1;
+        const startCoordY = coords[2] - 1;
         for (let y = startCoordY; y < startCoordY + 3; y++) {
           if (x >= 0 && x < boardSize && y >= 0 && y < boardSize) {
-            const coord = x + '' + y;
+            const coord = boardId + '_' + x + '_' + y;
             this.collision.add(coord);
           }
         }
@@ -97,26 +122,31 @@ const play = {
   shot: 0,
   hit: 0,
   dead: 0,
+
+  /**
+   * @param {string} data
+   */
   set updateData(data) {
     this[data] += 1;
     this.render();
   },
+
   render() {
     record.textContent = this.record;
     shot.textContent = this.shot;
     hit.textContent = this.hit;
     dead.textContent = this.dead;
   },
+
   reset() {
     this.shot = 0;
     this.hit = 0;
     this.dead = 0;
 
-    enemy.querySelectorAll('td').forEach((cell) => {
-      cell.classList.remove('hit', 'miss', 'dead');
-    });
+    show.reset();
 
-    game.generateShip();
+    game.generateShip(myBoardId);
+    game.generateShip(enemyBoardId);
 
     this.render();
   }
@@ -135,23 +165,36 @@ const show = {
   changeClass(elem, value) {
     elem.className = value;
   },
+  showMyBoard() {
+    for (const ship of game.myShips) {
+      for (const location of ship.location) {
+        myBoard.querySelector(`#${location}`).style.backgroundColor = '#00f';
+      }
+    }
+  },
+  reset() {
+    enemy.querySelectorAll('td').forEach((cell) => {
+      cell.classList.remove('hit', 'miss', 'dead');
+    });
+
+    myBoard.querySelectorAll('td').forEach((cell) => {
+      cell.style.backgroundColor = '#fff';
+    });
+  }
 };
 
-const generateBoard = () => {
-  let rows = [];
+const generateBoard = (elem, prefix) => {
+  const fragment = document.createDocumentFragment();
   for (let x = 0; x < boardSize; x++) {
-    let cols = [];
     const tr = document.createElement('tr');
     for (let y = 0; y < boardSize; y++) {
       const td = document.createElement('td');
-      td.id = x + '' + y;
-
-      cols.push(td);
+      td.id = prefix + '_' + x + '_' + y;
+      tr.appendChild(td);
     }
-    tr.append(...cols);
-    rows.push(tr);
+    fragment.appendChild(tr);
   }
-  enemy.append(...rows);
+  elem.appendChild(fragment);
 };
 
 const fire = (event) => {
@@ -196,14 +239,21 @@ const fire = (event) => {
 };
 
 const init = () => {
-  generateBoard();
+  generateBoard(myBoard, myBoardId);
+  generateBoard(enemy, enemyBoardId);
 
   enemy.addEventListener('click', fire);
   play.render();
-  game.generateShip();
+  game.generateShip(enemyBoardId);
 
   again.addEventListener('click', () => {
     play.reset();
+  });
+
+  generate.addEventListener('click', () => {
+    play.reset();
+    game.generateShip(myBoardId);
+    show.showMyBoard();
   });
 
   record.addEventListener('dblclick', () => {
@@ -213,4 +263,4 @@ const init = () => {
   });
 };
 
-init();
+document.addEventListener('DOMContentLoaded', init);

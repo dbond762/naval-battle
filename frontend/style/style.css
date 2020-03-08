@@ -13,11 +13,23 @@ main {
 
 .board {
     margin: 10px;
+    display: flex;
+    justify-content: space-around;
 }
 
 table {
     border-collapse: collapse;
+    margin: 0 20px;
+}
 
+@media (max-width: 860px) {
+  .board {
+    flex-direction: column;
+  }
+
+  table {
+    margin: 15px 0;
+  }
 }
 
 td {
@@ -67,6 +79,8 @@ a {
     color: #FF421D;
     transition: 0.5s;
     overflow: hidden;
+    display: inline-block;
+    margin-bottom: 10px;
   }
   a:hover {
     color: #fff;
