@@ -1,9 +1,9 @@
-const record = document.getElementById('record');
-const shot = document.getElementById('shot');
-const hit = document.getElementById('hit');
-const dead = document.getElementById('dead');
-const enemy = document.getElementById('enemy');
-const again = document.getElementById('again');
+const record = document.querySelector('#record');
+const shot = document.querySelector('#shot');
+const hit = document.querySelector('#hit');
+const dead = document.querySelector('#dead');
+const enemy = document.querySelector('#enemy');
+const again = document.querySelector('#again');
 const header = document.querySelector('.header');
 
 const boardSize = 10;
@@ -137,6 +137,23 @@ const show = {
   },
 };
 
+const generateBoard = () => {
+  let rows = [];
+  for (let x = 0; x < boardSize; x++) {
+    let cols = [];
+    const tr = document.createElement('tr');
+    for (let y = 0; y < boardSize; y++) {
+      const td = document.createElement('td');
+      td.id = x + '' + y;
+
+      cols.push(td);
+    }
+    tr.append(...cols);
+    rows.push(tr);
+  }
+  enemy.append(...rows);
+};
+
 const fire = (event) => {
   const target = event.target;
 
@@ -179,6 +196,8 @@ const fire = (event) => {
 };
 
 const init = () => {
+  generateBoard();
+
   enemy.addEventListener('click', fire);
   play.render();
   game.generateShip();
