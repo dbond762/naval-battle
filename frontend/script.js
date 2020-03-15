@@ -168,7 +168,7 @@ const show = {
   showMyBoard() {
     for (const ship of game.myShips) {
       for (const location of ship.location) {
-        myBoard.querySelector(`#${location}`).style.backgroundColor = '#00f';
+        myBoard.querySelector(`#${location}`).style.borderColor = '#f00';
       }
     }
   },
@@ -178,7 +178,7 @@ const show = {
     });
 
     myBoard.querySelectorAll('td').forEach((cell) => {
-      cell.style.backgroundColor = '#fff';
+      cell.style.borderColor = '#000';
     });
   }
 };
