@@ -15,7 +15,7 @@ func init() {
 	env := os.Getenv("env")
 	envFile := fmt.Sprintf("%s.env", env)
 	if err := godotenv.Load(envFile); err != nil {
-		log.Print("Environment file not found")
+		log.Fatal("Environment file not found")
 	}
 }
 

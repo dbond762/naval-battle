@@ -8,13 +8,15 @@ const again = document.querySelector('#again');
 const generate = document.querySelector('#generate');
 const header = document.querySelector('.header');
 
+let conn;
+
 const boardSize = 10;
 const horizontalDirectionProbability = 0.5;
 const finalPhrase = 'Игра окончена!';
 const finalColor = '#f00';
 const storageRecordID = 'navalBattleRecord';
-const myBoardId = 'm';
-const enemyBoardId = 'e';
+const myBoardId = 'm_';
+const enemyBoardId = 'e_';
 
 const game = {
   myShips: [],
@@ -77,9 +79,9 @@ const game = {
 
     for (let i = 0; i < shipSize; i++) {
       if (direction) {
-        ship.location.push(boardId + '_' + x + '_' + (y + i));
+        ship.location.push(boardId + x + '_' + (y + i));
       } else {
-        ship.location.push(boardId + '_' + (x + i) + '_' + y);
+        ship.location.push(boardId + (x + i) + '_' + y);
       }
       ship.hit.push('');
     }
@@ -108,7 +110,7 @@ const game = {
         const startCoordY = coords[2] - 1;
         for (let y = startCoordY; y < startCoordY + 3; y++) {
           if (x >= 0 && x < boardSize && y >= 0 && y < boardSize) {
-            const coord = boardId + '_' + x + '_' + y;
+            const coord = boardId + x + '_' + y;
             this.collision.add(coord);
           }
         }
@@ -189,12 +191,28 @@ const generateBoard = (elem, prefix) => {
     const tr = document.createElement('tr');
     for (let y = 0; y < boardSize; y++) {
       const td = document.createElement('td');
-      td.id = prefix + '_' + x + '_' + y;
+      td.id = prefix + x + '_' + y;
       tr.appendChild(td);
     }
     fragment.appendChild(tr);
   }
   elem.appendChild(fragment);
+};
+
+const connect = () => {
+  let conn;
+
+  if (window["WebSocket"]) {
+    conn = new WebSocket(`ws://${document.location.host}/api/connect`);
+    conn.onclose = (e) => {
+      console.log('connection closed');
+    };
+    conn.onmessage = enemyStep;
+  } else {
+    console.log('You browser does not support WebSocket');
+  }
+
+  return conn;
 };
 
 const fire = (event) => {
@@ -204,38 +222,45 @@ const fire = (event) => {
     return;
   }
 
-  show.miss(target);
-  play.updateData = 'shot';
+  conn.send(`step:${target.id}`);
 
-  for (let i = 0; i < game.ships.length; i++) {
-    const ship = game.ships[i];
-    const index = ship.location.indexOf(target.id);
-    if (index >= 0) {
-      show.hit(target);
-      play.updateData = 'hit';
-      ship.hit[index] = 'x';
-      const life = ship.hit.indexOf('');
-      if (life < 0) {
-        play.updateData = 'dead';
-        for (const id of ship.location) {
-          show.dead(document.getElementById(id));
-        }
+  // show.miss(target);
+  // play.updateData = 'shot';
 
-        game.shipCount -= 1;
+  // for (let i = 0; i < game.ships.length; i++) {
+  //   const ship = game.ships[i];
+  //   const index = ship.location.indexOf(target.id);
+  //   if (index >= 0) {
+  //     show.hit(target);
+  //     play.updateData = 'hit';
+  //     ship.hit[index] = 'x';
+  //     const life = ship.hit.indexOf('');
+  //     if (life < 0) {
+  //       play.updateData = 'dead';
+  //       for (const id of ship.location) {
+  //         show.dead(document.getElementById(id));
+  //       }
 
-        if (game.shipCount < 1) {
-          header.textContent = finalPhrase;
-          header.style.color = finalColor;
+  //       game.shipCount -= 1;
 
-          if (play.shot < play.record || play.record == 0) {
-            localStorage.setItem(storageRecordID, play.shot);
-            play.record = play.shot;
-            play.render();
-          }
-        }
-      }
-    }
-  }
+  //       if (game.shipCount < 1) {
+  //         header.textContent = finalPhrase;
+  //         header.style.color = finalColor;
+
+  //         if (play.shot < play.record || play.record == 0) {
+  //           localStorage.setItem(storageRecordID, play.shot);
+  //           play.record = play.shot;
+  //           play.render();
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+};
+
+const enemyStep = (e) => {
+  console.log(e.data);
+  conn.send(`res:miss`);
 };
 
 const init = () => {
@@ -244,10 +269,10 @@ const init = () => {
 
   enemy.addEventListener('click', fire);
   play.render();
-  game.generateShip(enemyBoardId);
 
   again.addEventListener('click', () => {
     play.reset();
+    conn = connect();
   });
 
   generate.addEventListener('click', () => {
